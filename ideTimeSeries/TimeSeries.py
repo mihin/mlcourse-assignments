@@ -177,13 +177,15 @@ def main ():
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    lin_reg = LinearRegression()
-    lin_reg.fit(X_train_scaled, y_train)
+# Q1
+#     lin_reg = LinearRegression()
+#     lin_reg.fit(X_train_scaled, y_train)
+#
+#     score = cross_validate(lin_reg, X_train_scaled, X_test_scaled, y_train, y_test)
+#     print('Question 1.: {}'.format(score)) # 4490.0642733984405
+#     plotCoefficients(lin_reg, X_train)
 
-    # score = cross_validate(lin_reg, X_train_scaled, X_test_scaled, y_train, y_test)
-    # print('Question 1.: {}'.format(score))
-    # plotCoefficients(lin_reg, X_train)
-
+# Q2
     lassocv = LassoCV()
     lassocv.fit(X_train_scaled, y_train)
     score = cross_validate(lassocv, X_train_scaled, X_test_scaled, y_train, y_test)
@@ -193,9 +195,7 @@ def main ():
     coefs = getCoefficients(lassocv, X_train)
     coefs['zeros'] = (np.abs(coefs['coef']) < 0.0001).astype('int64')
     zerosCount = np.sum(coefs['zeros'])
-    print(coefs.describe())
     print('Question 2. Zero params = {}'.format(zerosCount)) # 17
-    # print(coefs[1, :].reduce(lambda c, l: l + 1 if abs(c)<0.0001 else 0 ))
 
 
 
