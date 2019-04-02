@@ -13,6 +13,9 @@ from sklearn.linear_model import LinearRegression, RidgeCV, LassoCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
+from sklearn.decomposition import PCA
+from sklearn.pipeline import make_pipeline
+
 
 import matplotlib.pyplot as plt
 # %matplotlib inline
@@ -169,6 +172,32 @@ def cross_validate (model, X_train_scaled, X_test_scaled, y_train, y_test):
     # plotModelResults(model, X_train_scaled, X_test_scaled, y_train, y_test, cv=tscv)
     return mean_score
 
+
+def plotPCA(pca):
+    """
+    Plots accumulated percentage of explained variance by component
+
+    pca: fitted PCA object
+    """
+    components = range(1, pca.n_components_ + 1)
+    variance = np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4) * 100)
+    plt.figure(figsize=(20, 10))
+    plt.bar(components, variance)
+
+    # additionally mark the level of 95% of explained variance
+    plt.hlines(y=95, xmin=0, xmax=len(components), linestyles='dashed', colors='red')
+
+    plt.xlabel('PCA components')
+    plt.ylabel('variance')
+    plt.xticks(components)
+    plt.show()
+
+def train_predict(model, X, X_test, y, y_test):
+    model.fit(X, y)
+    score = cross_validate(model, X, X_test, y, y_test)
+    return score
+
+
 def main ():
     df = readDataframe();
     X_train, X_test, y_train, y_test = prepareData(df, 12, 48, 0.3)
@@ -179,25 +208,34 @@ def main ():
 
 # Q1
 #     lin_reg = LinearRegression()
-#     lin_reg.fit(X_train_scaled, y_train)
-#
-#     score = cross_validate(lin_reg, X_train_scaled, X_test_scaled, y_train, y_test)
+#     score = train_predict(lin_reg, X_train_scaled, X_test_scaled, y_train, y_test)
 #     print('Question 1.: {}'.format(score)) # 4490.0642733984405
-#     plotCoefficients(lin_reg, X_train)
+    # plotCoefficients(lin_reg, X_train)
 
 # Q2
-    lassocv = LassoCV()
-    lassocv.fit(X_train_scaled, y_train)
-    score = cross_validate(lassocv, X_train_scaled, X_test_scaled, y_train, y_test)
-    print('LassoCV scores: {}'.format(score))
-    # plotCoefficients(lassocv, X_train)
+#     lassocv = LassoCV()
+#     score = train_predict(lassocv, X_train_scaled, X_test_scaled, y_train, y_test)
+#     print('LassoCV scores: {}'.format(score))
+#     # plotCoefficients(lassocv, X_train)
+#
+#     coefs = getCoefficients(lassocv, X_train)
+#     coefs['zeros'] = (np.abs(coefs['coef']) < 0.0001).astype('int64')
+#     zerosCount = np.sum(coefs['zeros'])
+#     print('Question 2. Zero params = {}'.format(zerosCount)) # 17
 
-    coefs = getCoefficients(lassocv, X_train)
-    coefs['zeros'] = (np.abs(coefs['coef']) < 0.0001).astype('int64')
-    zerosCount = np.sum(coefs['zeros'])
-    print('Question 2. Zero params = {}'.format(zerosCount)) # 17
+# Q3
+## = 9
+    # pca = PCA()
+    # pca.fit(X_train_scaled, y_train)
+    # plotPCA(pca)
 
+    pcaOptimal = PCA(n_components=0.95)
+    pca_features_train = pcaOptimal.fit_transform(X_train_scaled, y_train)
+    pca_features_tes = pcaOptimal.transform(X_test_scaled)
 
+    lin_reg_pca = LinearRegression()
+    score = train_predict(lin_reg_pca, pca_features_train, pca_features_tes, y_train, y_test)
+    print('Question 4. pca lin regr score: {}'.format(score)) # 4676.564061057774
 
 
 if __name__ == '__main__':
